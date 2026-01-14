@@ -35,11 +35,17 @@ jobs:
       - name: Trivy File System Scan
         run: trivy fs --format json -o fs-report.json .
 
-      - name: Install Gitleaks
-        run: sudo apt-get update -y && sudo apt-get install -y gitleaks
+      # ---- Modified Gitleaks only ----
+      - name: Install Gitleaks (Binary, non interactive)
+        run: |
+          wget -q https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks_linux_amd64.tar.gz
+          tar -xzf gitleaks_linux_amd64.tar.gz
+          sudo mv gitleaks /usr/local/bin/
+          gitleaks --version
 
       - name: Gitleaks Scan
-        run: gitleaks detect -s . -r gitleaks-report.json -f json
+        run: gitleaks detect --source . --report-path gitleaks-report.json --format json
+      # ---- End of change ----
 
       - name: Upload Reports
         uses: actions/upload-artifact@v4
@@ -48,6 +54,7 @@ jobs:
           path: |
             fs-report.json
             gitleaks-report.json
+
   test:
     runs-on: self-hosted
 
